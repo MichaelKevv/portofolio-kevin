@@ -21,12 +21,13 @@
           <a href="#about" class="hover:text-white transition-colors">About</a>
           <a href="#skills" class="hover:text-white transition-colors">Skills</a>
           <a href="#experience" class="hover:text-white transition-colors">Experience</a>
+          <a href="#education" class="hover:text-white transition-colors">Education</a>
           <a href="#projects" class="hover:text-white transition-colors">Projects</a>
         </div>
-        <a href="mailto:kevin@example.com" class="reveal reveal-delay-200 relative inline-flex h-10 overflow-hidden rounded-full p-[1px] focus:outline-none hover:scale-105 transition-transform">
+        <a href="#contact" class="reveal reveal-delay-200 relative inline-flex h-10 overflow-hidden rounded-full p-[1px] focus:outline-none hover:scale-105 transition-transform">
           <span class="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
           <span class="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-background/80 px-6 py-1 text-sm font-bold text-white backdrop-blur-3xl transition-colors hover:bg-background">
-            Hire Me
+            Contact Me
           </span>
         </a>
       </nav>
@@ -54,12 +55,14 @@
             {{ profile.bio }}
           </p>
 
-          <div class="pt-8 flex flex-wrap gap-4 justify-center">
-            <a href="#projects" class="px-8 py-4 bg-white text-black rounded-2xl font-bold hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all duration-300">
-              View Work
+          <div class="pt-8 flex flex-wrap gap-5 justify-center">
+            <a href="#projects" class="group flex items-center gap-3 px-10 py-4 bg-white text-black rounded-full font-bold text-lg hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] transition-all duration-300">
+              <span>View Work</span>
+              <LucideArrowRight class="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </a>
-            <a :href="profile?.github_url" target="_blank" class="px-8 py-4 bg-white/10 text-white border border-white/10 backdrop-blur-md rounded-2xl font-bold hover:bg-white/20 hover:scale-105 transition-all duration-300 flex items-center gap-2">
-              <LucideGithub class="w-5 h-5" /> GitHub
+            <a v-if="profile?.github" :href="profile.github" target="_blank" class="group flex items-center gap-3 px-10 py-4 bg-white/5 border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all duration-300">
+              <Icon name="lucide:github" class="w-5 h-5" />
+              <span>GitHub</span>
             </a>
           </div>
         </div>
@@ -98,8 +101,9 @@
           <div v-for="(skill, index) in skills" :key="skill.id" 
                class="glass-card px-6 py-4 flex items-center gap-4 group hover:-translate-y-1 hover:border-accent/50 hover:shadow-[0_10px_30px_-10px_rgba(232,121,249,0.3)] transition-all duration-300 reveal cursor-default"
                :style="{ transitionDelay: `${index * 50}ms` }">
-            <div class="text-accent group-hover:scale-110 transition-transform flex-shrink-0">
-               <LucideCode v-if="skill.icon === 'braces'" class="w-6 h-6" />
+            <div class="text-accent group-hover:scale-110 transition-transform flex-shrink-0 flex items-center justify-center">
+               <Icon v-if="skill.icon && skill.icon.includes(':')" :name="skill.icon" class="w-7 h-7" />
+               <LucideCode v-else-if="skill.icon === 'braces'" class="w-6 h-6" />
                <LucideServer v-else-if="skill.icon === 'server'" class="w-6 h-6" />
                <LucideDatabase v-else-if="skill.icon === 'database'" class="w-6 h-6" />
                <LucideSmartphone v-else-if="skill.icon === 'smartphone'" class="w-6 h-6" />
@@ -157,6 +161,40 @@
         </div>
       </section>
 
+      <!-- EDUCATION -->
+      <section id="education" class="reveal">
+        <div class="flex items-center gap-4 mb-16">
+          <div class="p-3 rounded-2xl bg-primary/20 border border-primary/30">
+            <LucideGraduationCap class="w-8 h-8 text-primary" />
+          </div>
+          <h2 class="text-4xl font-bold text-white">Education</h2>
+        </div>
+        
+        <div class="space-y-8" v-if="sortedEducations && sortedEducations.length">
+          <div v-for="(edu, index) in sortedEducations" :key="edu.id" class="glass-card p-8 md:p-10 reveal" :style="{ transitionDelay: `${index * 100}ms` }">
+            <div class="md:flex justify-between items-start mb-6">
+              <div>
+                <h3 class="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                  <LucideBookOpen class="w-7 h-7 text-primary/70" />
+                  {{ edu.institution }}
+                </h3>
+                <h4 class="text-xl font-medium text-primary">{{ edu.degree }}</h4>
+                <div v-if="edu.gpa" class="mt-2 text-sm text-gray-400 font-medium bg-white/5 inline-block px-3 py-1 rounded-lg border border-white/5">
+                  GPA: <span class="text-white">{{ edu.gpa }}</span>
+                </div>
+              </div>
+              <div class="mt-4 md:mt-0 px-4 py-1.5 bg-white/5 rounded-full border border-white/10 text-gray-300 font-medium text-sm inline-block backdrop-blur-md">
+                {{ edu.period }}
+              </div>
+            </div>
+            
+            <div class="mt-6 text-gray-400 leading-relaxed whitespace-pre-line">
+              {{ edu.description }}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- PROJECTS -->
       <section id="projects" class="reveal">
         <div class="flex items-center justify-between mb-16">
@@ -170,41 +208,95 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8" v-if="projects">
           <div v-for="(project, index) in projects" :key="project.id" 
-               class="glass-card p-8 flex flex-col group hover:-translate-y-2 hover:border-white/20 hover:shadow-[0_20px_50px_-20px_rgba(255,255,255,0.1)] transition-all duration-500 reveal"
+               class="glass-card flex flex-col group hover:-translate-y-2 hover:border-white/20 hover:shadow-[0_20px_50px_-20px_rgba(255,255,255,0.1)] transition-all duration-500 reveal overflow-hidden"
                :style="{ transitionDelay: `${index * 100}ms` }">
             
-            <div class="flex-1">
-              <h3 class="text-3xl font-bold text-white mb-4 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-secondary group-hover:to-primary transition-all">{{ project.title }}</h3>
-              <p class="text-gray-400 text-lg leading-relaxed mb-8">{{ project.description }}</p>
-            </div>
-            
-            <div class="flex flex-wrap gap-2 mb-10">
-              <span v-for="tech in project.tech_stack" :key="tech" class="px-4 py-2 bg-black/40 border border-white/5 text-sm text-gray-300 rounded-xl font-medium">
-                {{ tech }}
-              </span>
+            <div v-if="project.image_url" class="w-full h-48 sm:h-64 overflow-hidden border-b border-white/5 cursor-pointer relative group/image" @click="openLightbox(project.image_url)">
+              <img :src="project.image_url" :alt="project.title" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                <LucideMaximize2 class="w-8 h-8 text-white drop-shadow-lg" />
+              </div>
             </div>
 
-            <div class="flex gap-4">
-              <a v-if="project.live_url" :href="project.live_url" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-2xl hover:opacity-90 transition-opacity shadow-lg shadow-primary/25">
-                Visit Live <LucideExternalLink class="w-5 h-5" />
+            <div class="p-8 flex-1 flex flex-col">
+              <div class="flex-1">
+                <h3 class="text-3xl font-bold text-white mb-4 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-secondary group-hover:to-primary transition-all">{{ project.title }}</h3>
+                <p class="text-gray-400 text-lg leading-relaxed mb-8">{{ project.description }}</p>
+              </div>
+              
+              <div class="flex flex-wrap gap-2 mb-10">
+                <span v-for="tech in project.tech_stack" :key="tech" class="px-4 py-2 bg-black/40 border border-white/5 text-sm text-gray-300 rounded-xl font-medium">
+                  {{ tech }}
+                </span>
+              </div>
+
+              <div class="flex gap-4 mt-auto">
+                <a v-if="project.live_url" :href="project.live_url" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-2xl hover:opacity-90 transition-opacity shadow-lg shadow-primary/25">
+                  Visit Live <LucideExternalLink class="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- CTA SECTION -->
+      <section id="contact" class="reveal relative overflow-hidden rounded-[3rem] p-12 md:p-20 glass-card text-center border-white/10 border shadow-[0_0_50px_rgba(168,85,247,0.1)]">
+        <!-- Glow effects inside the CTA -->
+        <div class="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5"></div>
+        <div class="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-[100px]"></div>
+        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-secondary/20 rounded-full blur-[100px]"></div>
+
+        <div class="relative z-10 max-w-3xl mx-auto space-y-8">
+          <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight">
+            Ready to Build Something <span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Amazing?</span>
+          </h2>
+          <p class="text-xl text-gray-400">
+            Let's collaborate to bring your ideas to life. I'm currently available for freelance projects and exciting full-time opportunities.
+          </p>
+          
+          <div class="flex flex-col items-center gap-6 pt-6">
+            <a v-if="profile?.email" :href="`mailto:${profile.email}`" class="group relative inline-flex items-center gap-3 px-10 py-5 bg-white text-black rounded-full font-bold text-lg hover:scale-105 transition-all shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)]">
+              <LucideMail class="w-6 h-6 group-hover:scale-110 transition-transform" />
+              <span>Say Hello!</span>
+            </a>
+            
+            <div class="flex items-center gap-4 mt-2">
+              <a v-if="profile?.linkedin" :href="profile.linkedin" target="_blank" class="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-gray-300 hover:text-white transition-all hover:scale-110 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                <Icon name="lucide:linkedin" class="w-6 h-6" />
               </a>
-              <a v-if="project.github_url" :href="project.github_url" target="_blank" class="flex-1 flex items-center justify-center gap-2 py-4 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-colors border border-white/10">
-                Source <LucideGithub class="w-5 h-5" />
+              <a v-if="profile?.github" :href="profile.github" target="_blank" class="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-gray-300 hover:text-white transition-all hover:scale-110 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                <Icon name="lucide:github" class="w-6 h-6" />
+              </a>
+              <a v-if="profile?.instagram" :href="profile.instagram" target="_blank" class="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-gray-300 hover:text-white transition-all hover:scale-110 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                <Icon name="lucide:instagram" class="w-6 h-6" />
+              </a>
+              <a v-if="profile?.whatsapp" :href="`https://wa.me/${profile.whatsapp.replace(/\D/g, '')}`" target="_blank" class="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full text-gray-300 hover:text-white transition-all hover:scale-110 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                <Icon name="mdi:whatsapp" class="w-6 h-6" />
               </a>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- Lightbox Modal -->
+      <ClientOnly>
+        <Teleport to="body">
+          <div v-if="lightboxImage" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4" @click="closeLightbox">
+            <div class="relative max-w-5xl max-h-[90vh] w-full flex justify-center">
+              <button @click="closeLightbox" class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
+                <LucideX class="w-8 h-8" />
+              </button>
+              <img :src="lightboxImage" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" @click.stop />
+            </div>
+          </div>
+        </Teleport>
+      </ClientOnly>
+
     </main>
 
-    <footer class="border-t border-white/5 bg-background/50 backdrop-blur-xl py-12 text-center text-gray-500 relative z-10 mt-20">
+    <footer class="border-t border-white/10 py-12 mt-20 relative z-10 bg-black/50 backdrop-blur-xl text-center text-gray-500">
       <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <p class="font-medium">© {{ new Date().getFullYear() }} {{ profile?.name }}. All rights reserved.</p>
-        <div class="flex items-center gap-2">
-           <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-           <span>Systems Online</span>
-        </div>
       </div>
     </footer>
   </div>
@@ -214,6 +306,18 @@
 import { onMounted } from 'vue'
 
 const supabase = useSupabaseClient()
+
+const loading = ref(true)
+
+const lightboxImage = ref(null)
+const openLightbox = (url) => {
+  if (url) lightboxImage.value = url
+}
+const closeLightbox = () => {
+  lightboxImage.value = null
+}
+
+const activeSection = ref('home')
 
 const { data: profile } = await useAsyncData('profile', async () => {
     const { data } = await supabase.from('profile').select('*').single()
@@ -228,6 +332,23 @@ const { data: experiences } = await useAsyncData('experiences', async () => {
 const { data: skills } = await useAsyncData('skills', async () => {
     const { data } = await supabase.from('skills').select('*').order('id', { ascending: true })
     return data
+})
+
+const { data: educations } = await useAsyncData('educations', async () => {
+    const { data } = await supabase.from('education').select('*')
+    return data
+})
+
+const sortedEducations = computed(() => {
+  if (!educations.value) return []
+  return [...educations.value].sort((a, b) => {
+    // Extract years from the period string and get the maximum year (usually the end year)
+    const getYear = (str) => {
+      const match = (str || '').match(/\d{4}/g)
+      return match ? Math.max(...match.map(Number)) : 0
+    }
+    return getYear(b.period) - getYear(a.period)
+  })
 })
 
 const groupedExperiences = computed(() => {

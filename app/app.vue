@@ -4,3 +4,11 @@
     <NuxtPage />
   </div>
 </template>
+
+<script setup>
+useHead({
+  htmlAttrs: {
+    class: 'scroll-smooth'
+  }
+})
+</script>

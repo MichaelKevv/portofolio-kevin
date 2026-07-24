@@ -32,6 +32,24 @@
           <input v-model="form.projects_completed" type="number" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50" />
         </div>
       </div>
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">LinkedIn URL</label>
+          <input v-model="form.linkedin" placeholder="https://linkedin.com/in/..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">GitHub URL</label>
+          <input v-model="form.github" placeholder="https://github.com/..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Instagram URL</label>
+          <input v-model="form.instagram" placeholder="https://instagram.com/..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">WhatsApp Number</label>
+          <input v-model="form.whatsapp" placeholder="+628..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary/50" />
+        </div>
+      </div>
       <div class="flex justify-end items-center gap-4">
         <span v-if="successMsg" class="text-green-400 text-sm flex items-center gap-1"><LucideCheckCircle class="w-4 h-4"/> {{ successMsg }}</span>
         <span v-if="errorMsg" class="text-red-400 text-sm">{{ errorMsg }}</span>
@@ -58,7 +76,11 @@ const form = ref({
   bio: '',
   description: '',
   years_experience: 0,
-  projects_completed: 0
+  projects_completed: 0,
+  linkedin: '',
+  instagram: '',
+  whatsapp: '',
+  github: ''
 })
 
 onMounted(async () => {
@@ -88,7 +110,11 @@ const save = async () => {
         description: form.value.description,
         email: form.value.email,
         years_experience: form.value.years_experience,
-        projects_completed: form.value.projects_completed
+        projects_completed: form.value.projects_completed,
+        linkedin: form.value.linkedin,
+        instagram: form.value.instagram,
+        whatsapp: form.value.whatsapp,
+        github: form.value.github
       })
       .eq('id', form.value.id)
       

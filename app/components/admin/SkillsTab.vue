@@ -29,24 +29,26 @@
           <button @click="openModal(item)" class="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 transition-colors">
             <LucideEdit class="w-4 h-4" />
           </button>
-          <button @click="deleteItem(item.id)" class="p-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-red-400 transition-colors">
-            <LucideTrash class="w-4 h-4" />
+          <button @click="confirmDelete(item.id)" class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+            <LucideTrash2 class="w-5 h-5" />
           </button>
         </div>
       </div>
     </div>
 
     <!-- Modal -->
-    <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div class="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-          <h3 class="text-xl font-bold">{{ isEditing ? 'Edit' : 'Add' }} Skill</h3>
-          <button @click="closeModal" class="text-gray-400 hover:text-white">
-            <LucideX class="w-5 h-5" />
-          </button>
-        </div>
+    <ClientOnly>
+      <Teleport to="body">
+        <div v-if="isModalOpen" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div class="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold">{{ isEditing ? 'Edit' : 'Add' }} Skill</h3>
+              <button @click="closeModal" class="text-gray-400 hover:text-white">
+                <LucideX class="w-5 h-5" />
+              </button>
+            </div>
 
-        <form @submit.prevent="save" class="space-y-4">
+            <form @submit.prevent="save" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-400 mb-1">Name</label>
             <input v-model="form.name" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-primary/50" />
@@ -61,17 +63,33 @@
                 <option value="logos:vue">Vue.js</option>
                 <option value="logos:nuxt-icon">Nuxt.js</option>
                 <option value="logos:react">React</option>
+                <option value="logos:flutter">Flutter</option>
+                <option value="logos:bootstrap">Bootstrap 5</option>
                 <option value="logos:tailwindcss-icon">Tailwind CSS</option>
                 <option value="logos:javascript">JavaScript</option>
                 <option value="logos:typescript-icon">TypeScript</option>
                 <option value="logos:python">Python</option>
                 <option value="logos:mysql">MySQL</option>
+                <option value="logos:mariadb-icon">MariaDB</option>
                 <option value="logos:postgresql">PostgreSQL</option>
                 <option value="logos:git-icon">Git</option>
                 <option value="logos:docker-icon">Docker</option>
+                <option value="logos:gitlab">GitLab CI/CD</option>
+                <option value="logos:ubuntu">Ubuntu</option>
+                <option value="logos:linux-tux">WSL2 / Linux</option>
+                <option value="logos:nginx">Nginx</option>
+                <option value="logos:apache">Apache</option>
+                <option value="logos:cloudflare-icon">Cloudflare</option>
                 <option value="logos:figma">Figma</option>
                 <option value="logos:html-5">HTML5</option>
                 <option value="logos:css-3">CSS3</option>
+              </optgroup>
+              <optgroup label="System & Tools (Iconify)">
+                <option value="mdi:api">REST API</option>
+                <option value="lucide:server">Coolify / Server</option>
+                <option value="mdi:shield-lock-outline">SSL / Security</option>
+                <option value="mdi:clock-outline">Cron / Scheduler</option>
+                <option value="mdi:cog-box">Supervisor / Process</option>
               </optgroup>
               <optgroup label="Generic (Legacy)">
                 <option value="braces">Code (Braces)</option>
@@ -100,7 +118,17 @@
         </form>
       </div>
     </div>
+      </Teleport>
+    </ClientOnly>
   </div>
+  
+  <AdminConfirmDialog 
+    :is-open="showDeleteConfirm"
+    title="Delete Skill"
+    message="Are you sure you want to delete this skill? This action cannot be undone."
+    @confirm="executeDelete"
+    @cancel="showDeleteConfirm = false"
+  />
 </template>
 
 <script setup>
@@ -167,14 +195,26 @@ const save = async () => {
   }
 }
 
-const deleteItem = async (id) => {
-  if (confirm('Are you sure you want to delete this skill?')) {
-    try {
-      await supabase.from('skills').delete().eq('id', id)
-      await fetchItems()
-    } catch (e) {
-      alert('Error deleting skill')
-    }
+const showDeleteConfirm = ref(false)
+const itemToDelete = ref(null)
+
+const confirmDelete = (id) => {
+  itemToDelete.value = id
+  showDeleteConfirm.value = true
+}
+
+const executeDelete = async () => {
+  if (!itemToDelete.value) return
+  
+  try {
+    const { error } = await supabase.from('skills').delete().eq('id', itemToDelete.value)
+    if (error) throw error
+    items.value = items.value.filter(i => i.id !== itemToDelete.value)
+  } catch (e) {
+    alert('Error deleting item: ' + e.message)
+  } finally {
+    showDeleteConfirm.value = false
+    itemToDelete.value = null
   }
 }
 </script>

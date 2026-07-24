@@ -28,24 +28,41 @@
           <button @click="openModal(item)" class="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 transition-colors">
             <LucideEdit class="w-4 h-4" />
           </button>
-          <button @click="deleteItem(item.id)" class="p-2 bg-red-500/10 hover:bg-red-500/20 rounded-lg text-red-400 transition-colors">
-            <LucideTrash class="w-4 h-4" />
+          <button @click="confirmDelete(item.id)" class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+            <LucideTrash2 class="w-5 h-5" />
           </button>
         </div>
       </div>
     </div>
 
     <!-- Modal -->
-    <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div class="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-          <h3 class="text-xl font-bold">{{ isEditing ? 'Edit' : 'Add' }} Project</h3>
-          <button @click="closeModal" class="text-gray-400 hover:text-white">
-            <LucideX class="w-5 h-5" />
-          </button>
-        </div>
+    <ClientOnly>
+      <Teleport to="body">
+        <div v-if="isModalOpen" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div class="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-xl font-bold">{{ isEditing ? 'Edit' : 'Add' }} Project</h3>
+              <button @click="closeModal" class="text-gray-400 hover:text-white">
+                <LucideX class="w-5 h-5" />
+              </button>
+            </div>
 
         <form @submit.prevent="save" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-400 mb-1">Project Image</label>
+            <input type="file" accept="image/*" @change="onFileChange" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/80" />
+            
+            <div v-if="imageSrc" class="mt-4 border border-white/10 rounded-xl overflow-hidden h-64 relative">
+              <img :src="imageSrc" class="w-full h-full object-cover" />
+            </div>
+            <div v-else-if="form.image_url" class="mt-4 border border-white/10 rounded-xl overflow-hidden h-64 relative">
+              <img :src="form.image_url" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
+                 <span class="text-white text-sm">Upload new image to replace</span>
+              </div>
+            </div>
+          </div>
+
           <div>
             <label class="block text-sm font-medium text-gray-400 mb-1">Title</label>
             <input v-model="form.title" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-primary/50" />
@@ -91,7 +108,17 @@
         </form>
       </div>
     </div>
+      </Teleport>
+    </ClientOnly>
   </div>
+  
+  <AdminConfirmDialog 
+    :is-open="showDeleteConfirm"
+    title="Delete Project"
+    message="Are you sure you want to delete this project? This action cannot be undone."
+    @confirm="executeDelete"
+    @cancel="showDeleteConfirm = false"
+  />
 </template>
 
 <script setup>
@@ -109,8 +136,39 @@ const form = ref({
   description: '',
   tech_stack: [],
   github_url: '',
-  live_url: ''
+  live_url: '',
+  image_url: ''
 })
+
+const imageSrc = ref(null)
+const selectedFile = ref(null)
+
+const onFileChange = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    selectedFile.value = file
+    imageSrc.value = URL.createObjectURL(file)
+  }
+}
+
+const uploadImage = async () => {
+  if (!selectedFile.value) return form.value.image_url;
+
+  return new Promise(async (resolve, reject) => {
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
+    const { data, error } = await supabase.storage.from('projects').upload(fileName, selectedFile.value, {
+      contentType: selectedFile.value.type
+    })
+    
+    if (error) {
+      alert('Error uploading image: ' + error.message)
+      reject(error)
+    } else {
+      const { data: { publicUrl } } = supabase.storage.from('projects').getPublicUrl(fileName)
+      resolve(publicUrl)
+    }
+  })
+}
 
 const fetchItems = async () => {
   loading.value = true
@@ -122,12 +180,14 @@ const fetchItems = async () => {
 onMounted(fetchItems)
 
 const openModal = (item = null) => {
+  imageSrc.value = null
+  selectedFile.value = null
   if (item) {
     isEditing.value = true
-    form.value = { ...item, tech_stack: [...(item.tech_stack || [])] }
+    form.value = { ...item, tech_stack: [...(item.tech_stack || [])], image_url: item.image_url || '' }
   } else {
     isEditing.value = false
-    form.value = { id: null, title: '', description: '', tech_stack: [''], github_url: '', live_url: '' }
+    form.value = { id: null, title: '', description: '', tech_stack: [''], github_url: '', live_url: '', image_url: '' }
   }
   isModalOpen.value = true
 }
@@ -158,6 +218,10 @@ const save = async () => {
       live_url: form.value.live_url
     }
 
+    if (imageSrc.value) {
+      payload.image_url = await uploadImage()
+    }
+
     if (isEditing.value) {
       await supabase.from('projects').update(payload).eq('id', form.value.id)
     } else {
@@ -173,14 +237,25 @@ const save = async () => {
   }
 }
 
-const deleteItem = async (id) => {
-  if (confirm('Are you sure you want to delete this project?')) {
-    try {
-      await supabase.from('projects').delete().eq('id', id)
-      await fetchItems()
-    } catch (e) {
-      alert('Error deleting project')
-    }
+const showDeleteConfirm = ref(false)
+const itemToDelete = ref(null)
+
+const confirmDelete = (id) => {
+  itemToDelete.value = id
+  showDeleteConfirm.value = true
+}
+
+const executeDelete = async () => {
+  if (!itemToDelete.value) return
+  
+  try {
+    await supabase.from('projects').delete().eq('id', itemToDelete.value)
+    await fetchItems()
+  } catch (e) {
+    alert('Error deleting item: ' + e.message)
+  } finally {
+    showDeleteConfirm.value = false
+    itemToDelete.value = null
   }
 }
 </script>
