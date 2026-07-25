@@ -25,6 +25,37 @@
         </div>
       </div>
 
+      <!-- Crop Modal -->
+      <ClientOnly>
+        <Teleport to="body">
+          <div v-if="showCropper" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <div class="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-2xl">
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Crop Profile Photo</h3>
+                <button type="button" @click="cancelCrop" class="text-gray-400 hover:text-white">
+                  <LucideX class="w-5 h-5" />
+                </button>
+              </div>
+              <div class="h-96 w-full bg-black rounded-xl overflow-hidden border border-white/10 mb-6">
+                <Cropper
+                  ref="cropperRef"
+                  class="w-full h-full"
+                  :src="cropImageSrc"
+                  :stencil-props="{ aspectRatio: 1 }"
+                  background-class="bg-black"
+                />
+              </div>
+              <div class="flex justify-end gap-3">
+                <button type="button" @click="cancelCrop" class="px-5 py-2.5 rounded-xl text-gray-400 hover:text-white transition-colors">Cancel</button>
+                <button type="button" @click="applyCrop" class="bg-primary hover:bg-primary/80 text-white px-6 py-2.5 rounded-xl transition-colors font-medium">
+                  Apply Crop
+                </button>
+              </div>
+            </div>
+          </div>
+        </Teleport>
+      </ClientOnly>
+
       <div class="grid grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium text-gray-400 mb-2">Name</label>
@@ -84,6 +115,9 @@
 </template>
 
 <script setup>
+import { Cropper } from 'vue-advanced-cropper'
+import 'vue-advanced-cropper/dist/style.css'
+
 const supabase = useSupabaseClient()
 const loading = ref(true)
 const saving = ref(false)
@@ -108,11 +142,42 @@ const form = ref({
 const imageSrc = ref(null)
 const selectedFile = ref(null)
 
+// Cropper refs
+const showCropper = ref(false)
+const cropImageSrc = ref(null)
+const cropperRef = ref(null)
+let originalFile = null
+
 const onFileChange = (e) => {
   const file = e.target.files[0]
   if (file) {
-    selectedFile.value = file
-    imageSrc.value = URL.createObjectURL(file)
+    originalFile = file
+    cropImageSrc.value = URL.createObjectURL(file)
+    showCropper.value = true
+  }
+  // Reset input so the same file can be selected again
+  e.target.value = ''
+}
+
+const cancelCrop = () => {
+  showCropper.value = false
+  cropImageSrc.value = null
+  originalFile = null
+}
+
+const applyCrop = () => {
+  if (cropperRef.value) {
+    const { canvas } = cropperRef.value.getResult()
+    if (canvas) {
+      canvas.toBlob((blob) => {
+        const file = new File([blob], originalFile.name, { type: originalFile.type })
+        selectedFile.value = file
+        imageSrc.value = URL.createObjectURL(file)
+        showCropper.value = false
+        cropImageSrc.value = null
+        originalFile = null
+      }, originalFile.type)
+    }
   }
 }
 
