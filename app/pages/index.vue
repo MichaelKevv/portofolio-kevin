@@ -70,9 +70,18 @@
 
       <!-- ABOUT -->
       <section id="about" class="reveal">
-        <div class="glass-card p-10 text-center">
-          <LucideUser class="w-12 h-12 text-primary mx-auto mb-6 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
-          <h2 class="text-3xl font-bold text-white mb-6">About Me</h2>
+        <div class="glass-card p-10 text-center relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-50"></div>
+          
+          <div class="relative z-10">
+            <div v-if="profile?.photo_url" class="relative w-32 h-32 mx-auto mb-8 rounded-full p-1 bg-gradient-to-tr from-primary to-secondary shadow-[0_0_30px_rgba(168,85,247,0.4)]">
+              <div class="w-full h-full rounded-full overflow-hidden border-4 border-background">
+                <img :src="profile.photo_url" alt="Profile Photo" class="w-full h-full object-cover" />
+              </div>
+            </div>
+            <LucideUser v-else class="w-12 h-12 text-primary mx-auto mb-6 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
+            
+            <h2 class="text-3xl font-bold text-white mb-6">About Me</h2>
           <p class="text-gray-300 text-lg leading-relaxed whitespace-pre-wrap max-w-3xl mx-auto">{{ profile?.description }}</p>
           
           <div class="flex justify-center gap-12 mt-12 pt-12 border-t border-white/10">
@@ -83,6 +92,7 @@
             <div>
               <h3 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-500 mb-2">{{ profile?.projects_completed }}+</h3>
               <p class="text-primary font-bold tracking-widest uppercase text-sm">Projects</p>
+            </div>
             </div>
           </div>
         </div>

@@ -4,6 +4,27 @@
       <LucideLoader2 class="w-8 h-8 animate-spin text-primary" />
     </div>
     <form v-else @submit.prevent="save" class="space-y-6">
+      <div class="flex items-center gap-6 mb-8 pb-8 border-b border-white/10">
+        <div class="relative w-32 h-32 rounded-full overflow-hidden border-2 border-white/10 bg-black/50 shrink-0">
+          <img v-if="imageSrc" :src="imageSrc" class="w-full h-full object-cover" />
+          <img v-else-if="form.photo_url" :src="form.photo_url" class="w-full h-full object-cover" />
+          <div v-else class="w-full h-full flex items-center justify-center">
+            <LucideUser class="w-12 h-12 text-gray-500" />
+          </div>
+          <div class="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+            <span class="text-xs font-medium">Change Photo</span>
+          </div>
+          <input type="file" accept="image/*" @change="onFileChange" class="absolute inset-0 opacity-0 cursor-pointer" />
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Profile Photo</h3>
+          <p class="text-sm text-gray-400 mb-2">Upload a professional photo for your about section. Recommended 1:1 ratio.</p>
+          <button type="button" @click="$el.querySelector('input[type=file]').click()" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-sm font-medium rounded-lg transition-colors border border-white/10">
+            Choose Image
+          </button>
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium text-gray-400 mb-2">Name</label>
@@ -80,8 +101,39 @@ const form = ref({
   linkedin: '',
   instagram: '',
   whatsapp: '',
-  github: ''
+  github: '',
+  photo_url: ''
 })
+
+const imageSrc = ref(null)
+const selectedFile = ref(null)
+
+const onFileChange = (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    selectedFile.value = file
+    imageSrc.value = URL.createObjectURL(file)
+  }
+}
+
+const uploadImage = async () => {
+  if (!selectedFile.value) return form.value.photo_url;
+
+  return new Promise(async (resolve, reject) => {
+    const fileName = `profile-${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`
+    const { data, error } = await supabase.storage.from('projects').upload(fileName, selectedFile.value, {
+      contentType: selectedFile.value.type
+    })
+    
+    if (error) {
+      alert('Error uploading image: ' + error.message)
+      reject(error)
+    } else {
+      const { data: { publicUrl } } = supabase.storage.from('projects').getPublicUrl(fileName)
+      resolve(publicUrl)
+    }
+  })
+}
 
 onMounted(async () => {
   try {
@@ -102,20 +154,27 @@ const save = async () => {
     successMsg.value = ''
     errorMsg.value = ''
     
+    const payload = {
+      name: form.value.name,
+      bio: form.value.bio,
+      description: form.value.description,
+      email: form.value.email,
+      years_experience: form.value.years_experience,
+      projects_completed: form.value.projects_completed,
+      linkedin: form.value.linkedin,
+      instagram: form.value.instagram,
+      whatsapp: form.value.whatsapp,
+      github: form.value.github
+    }
+
+    if (imageSrc.value) {
+      payload.photo_url = await uploadImage()
+      form.value.photo_url = payload.photo_url
+    }
+
     const { error } = await supabase
       .from('profile')
-      .update({
-        name: form.value.name,
-        bio: form.value.bio,
-        description: form.value.description,
-        email: form.value.email,
-        years_experience: form.value.years_experience,
-        projects_completed: form.value.projects_completed,
-        linkedin: form.value.linkedin,
-        instagram: form.value.instagram,
-        whatsapp: form.value.whatsapp,
-        github: form.value.github
-      })
+      .update(payload)
       .eq('id', form.value.id)
       
     if (error) throw error
